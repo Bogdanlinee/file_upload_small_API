@@ -1,8 +1,11 @@
 const { StatusCodes } = require('http-status-codes');
 const path = require('path');
 const CustomError = require('../errors/index');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+const { json } = require('express');
 
-const uploadProductImage = async (req, res) => {
+const uploadProductImageLocal = async (req, res) => {
   const imageMaxSize = 1024 * 1024;
 
   if (!req.files) {
@@ -24,6 +27,20 @@ const uploadProductImage = async (req, res) => {
   res.status(StatusCodes.OK).json({
     image: {
       src: `/uploads/${productImage.name}`
+    }
+  });
+}
+
+const uploadProductImage = async (req, res) => {
+  const result = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
+    use_filename: true, folder: 'upload-test'
+  });
+
+  fs.unlinkSync(req.files.image.tempFilePath);
+
+  res.status(StatusCodes.OK).json({
+    image: {
+      src: result.secure_url
     }
   });
 }
